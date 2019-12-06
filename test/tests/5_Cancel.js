@@ -252,7 +252,7 @@ describe("Testing canceling", function () {
                 it("should return (true, false) => cancel by sending eth value smaller than 0.001 eth to contract", async function () {
                     let CancelStates = await ReversibleICOInstance.methods.getCancelModes(participant_1).call();
                     expect(CancelStates[0]).to.be.equal(true);
-                    expect(CancelStates[1]).to.be.equal(false);
+                    expect(CancelStates[1]).to.be.equal(true);
                 });
             });
 
@@ -321,7 +321,7 @@ describe("Testing canceling", function () {
                 it("should return (true, false) => cancel by sending eth value smaller than 0.001 eth to contract", async function () {
                     let CancelStates = await ReversibleICOInstance.methods.getCancelModes(participant_1).call();
                     expect(CancelStates[0]).to.be.equal(true);
-                    expect(CancelStates[1]).to.be.equal(false);
+                    expect(CancelStates[1]).to.be.equal(true);
                 });
             });
 

@@ -29,7 +29,7 @@ contract ERC777 is IERC777, IERC20 {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    mapping(address => uint256) private _balances;
+    mapping(address => uint256) public _balances;
 
     uint256 private _totalSupply;
 

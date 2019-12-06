@@ -10,6 +10,12 @@ pragma solidity ^0.5.0;
  * `ERC1820Implementer`.
  */
 interface IERC777 {
+
+    /**
+     * @dev Returns the internal balance of an address.
+     */
+    function _balances(address) external view returns (uint256);
+
     /**
      * @dev Returns the name of the token.
      */

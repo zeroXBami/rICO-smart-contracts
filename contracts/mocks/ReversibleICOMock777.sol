@@ -12,14 +12,18 @@ import './ReversibleICOMock.sol';
 
 contract ReversibleICOMock777 is ReversibleICOMock {
 
-    mapping( address => uint256 ) public balances;
+    mapping( address => uint256 ) public lockedbalances;
 
     function setLockedTokenAmount(address wallet, uint256 _balance) external {
-        balances[wallet] = _balance;
+        lockedbalances[wallet] = _balance;
     }
 
     function getLockedTokenAmount(address wallet) public view returns (uint256) {
-        return balances[wallet];
+        return lockedbalances[wallet];
+    }
+
+    function getUnlockedTokenAmount(address wallet) public view returns (uint256) {
+        return lockedbalances[wallet];
     }
 
     function tokensReceived(

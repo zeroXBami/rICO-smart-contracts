@@ -203,16 +203,17 @@ describe("ERC777 - RICO Token", async function () {
                         await this.RicoToken.methods.getLockedBalance(holder).call()
                     ).to.be.equal(lockedAmount.toString());
                 });
-                it("returns their unlocked balance when calling `getUnlockedBalance` ", async function () {
-                    await this.ReversibleICOMock777.methods
-                        .setLockedTokenAmount(holder, lockedAmount)
-                        .send({ from: accounts[0], gas: 100000 });
-                    expect(
-                        await this.RicoToken.methods.getUnlockedBalance(holder).call()
-                    ).to.be.equal(
-                        setup.settings.token.supply.sub(new BN(lockedAmount)).toString()
-                    );
-                });
+
+                // it("returns their unlocked balance when calling `getUnlockedBalance` ", async function () {
+                //     await this.ReversibleICOMock777.methods
+                //         .setLockedTokenAmount(holder, lockedAmount)
+                //         .send({ from: accounts[0], gas: 100000 });
+                //     expect(
+                //         await this.RicoToken.methods.getUnlockedBalance(holder).call()
+                //     ).to.be.equal(
+                //         setup.settings.token.supply.sub(new BN(lockedAmount)).toString()
+                //     );
+                // });
             });
         }); //describe
 
@@ -320,7 +321,7 @@ describe("ERC777 - RICO Token", async function () {
                             await this.RicoToken.methods
                                 .transfer(accounts[1], amt.toString())
                                 .send({ from: holder, gas: 100000 });
-                        }, "getUnlockedBalance: Insufficient funds");
+                        }, "revert SafeMath: subtraction overflow");
                     });
 
                     it("should be able to transfer whole balance to RICO", async function () {
@@ -376,7 +377,7 @@ describe("ERC777 - RICO Token", async function () {
                             await this.RicoToken.methods
                                 .transfer(_ricoAddress, amt.toString())
                                 .send({ from: accounts[0], gas: 100000 });
-                        }, "getUnlockedBalance: Insufficient funds");
+                        }, "Move: Insufficient funds");
                     });
                 }
             );
@@ -454,7 +455,7 @@ describe("ERC777 - RICO Token", async function () {
             it("throws if amount is not unlocked", async function() {
                 await helpers.assertInvalidOpcode(async () => {
                     await this.RicoToken.methods
-                        .burn(locked.add( new BN(1)).toString(), ERC777data)
+                        .burn(locked.add(new BN(1)).toString(), ERC777data)
                         .send({ from: accounts[3], gas: 100000 });
                 }, "getUnlockedBalance: Insufficient funds");
 

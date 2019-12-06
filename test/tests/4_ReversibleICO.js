@@ -864,7 +864,7 @@ describe("ReversibleICO", function () {
                                 );
                             });
 
-                            describe("new contribution from the TestAcceptParticipant that is now whitelisted, is acceepted automatically.", async function () {
+                            describe("new contribution from the TestAcceptParticipant that is now whitelisted, is accepted automatically.", async function () {
 
                                 let newContributionTx, initialContributionsCount, afterContributionsCount;
 
@@ -922,11 +922,12 @@ describe("ReversibleICO", function () {
 
                             const ContributionCountToProcess = 15;
                             let whitelistTx;
-                            let initialParticipantTokenBalance;
+                            let initialParticipantTokenBalance, initialParticipantReservedTokens;
 
                             before(async function () {
 
                                 initialParticipantTokenBalance = await TokenContractInstance.methods.balanceOf(TestRejectParticipant).call();
+                                initialParticipantReservedTokens = await this.ReversibleICO.methods.getReservedTokens(TestRejectParticipant).call();
 
                                 let Participant = await this.ReversibleICO.methods.participantsByAddress(TestRejectParticipant).call();
                                 expect(
@@ -963,14 +964,16 @@ describe("ReversibleICO", function () {
                                 );
                             });
 
-                            it("Participant Token Balance is the same as initial", async function () {
+                            it("Participant Token Balance is the same as initial minus reserved token amount", async function () {
 
-                                // since we're rejecting their contribution.. new balance should be the same as initial.
+                                // since we're rejecting their contribution.. new balance should be the same as initial minus reserved token amount.
                                 const ParticipantTokenBalance = await TokenContractInstance.methods.balanceOf(TestRejectParticipant).call();
                                 expect(
                                     ParticipantTokenBalance.toString()
                                 ).to.be.equal(
-                                    initialParticipantTokenBalance.toString()
+                                    new helpers.BN(initialParticipantTokenBalance).sub(
+                                        new helpers.BN(initialParticipantReservedTokens)
+                                    ).toString()
                                 );
 
                             });

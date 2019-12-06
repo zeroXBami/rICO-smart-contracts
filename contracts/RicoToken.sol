@@ -3,6 +3,8 @@ pragma solidity ^0.5.0;
 import "./zeppelin/token/ERC777/ERC777.sol";
 
 interface ReversibleICO {
+    function getReservedTokens(address) external view returns(uint256);
+    function getUnlockedTokenAmount(address) external view returns(uint256);
     function getLockedTokenAmount(address) external view returns (uint256);
 }
 
@@ -45,20 +47,49 @@ contract RicoToken is ERC777 {
         frozen = _status;
     }
 
-    function getLockedBalance(address _owner) public view returns(uint) {
-        return rICO.getLockedTokenAmount(_owner);
+    /**
+     * @dev Returns the amount of locked tokens owned by an account (`tokenHolder`).
+     */
+    function getLockedBalance(address tokenHolder) public view returns(uint) {
+        return rICO.getLockedTokenAmount(tokenHolder);
     }
 
-    function getUnlockedBalance(address _owner) public view returns(uint) {
-        uint256 balance = balanceOf(_owner);
-        uint256 Locked = rICO.getLockedTokenAmount(_owner);
+    /**
+     * @dev Returns the amount of unlocked tokens owned by an account (`tokenHolder`).
+     */
+    function getUnlockedBalance(address tokenHolder) public view returns(uint) {
+        return rICO.getUnlockedTokenAmount(tokenHolder);
+        /*
+        uint256 balance = _balances[tokenHolder];
+        uint256 Locked = rICO.getLockedTokenAmount(tokenHolder);
+        // uint256 reserved = rICO.getReservedTokens(tokenHolder);
         if(balance > 0 && Locked > 0 && balance >= Locked) {
-            return balance.sub(Locked);
+            return balance.sub(Locked); // .sub(reserved);
         }
         return balance;
+        */
     }
 
-    // We should override burn as well. So users can't burn locked amounts
+    /**
+     * @dev Returns the amount of tokens owned by an account (`tokenHolder`).
+     */
+    function balanceOf(address tokenHolder) public view returns (uint256) {
+        // if a user has contributed and is not whitelisted
+        // their tokens have not been transferred to them yet
+        // balance is stored in the rICO.participantsByAddress[tokenHolder].reservedTokens
+
+        // a) once the whitelisting happens, and the tokens are transferred,
+        // reservedTokens is zeroed and the value is added to boughtTokens
+
+        // b) if user cancels using ETH, reservedTokens is zeroed
+
+        // add the amount to our local balance
+        return _balances[tokenHolder].add(rICO.getReservedTokens(tokenHolder));
+    }
+
+    /**
+     * @dev Override ERC777 _burn - so users can't burn locked amounts
+     */
     function _burn(
         address _operator,
         address _from,
@@ -67,14 +98,19 @@ contract RicoToken is ERC777 {
         bytes memory _operatorData
     )
         internal
+        requireInitialized
         requireNotFrozen
     {
-        require(_amount <= getUnlockedBalance(_from), "getUnlockedBalance: Insufficient funds");
+        require(_amount <= _balances[_from].sub(rICO.getLockedTokenAmount(_from)), "getUnlockedBalance: Insufficient funds");
         ERC777._burn(_operator, _from, _amount, _data, _operatorData);
     }
 
-    // We need to override send / transfer methods in order to only allow transfers within RICO unlocked calculations
-    // ricoAddress can receive any amount for withdraw functionality
+    /**
+     * @dev Override ERC777 _move
+     *
+     * 1 - users can send their full balance to rICO
+     * 2 - for other receivers transfers are capped at unlocked balance
+     */
     function _move(
         address _operator,
         address _from,
@@ -84,18 +120,16 @@ contract RicoToken is ERC777 {
         bytes memory _operatorData
     )
         internal
-        requireNotFrozen
         requireInitialized
+        requireNotFrozen
     {
-
         if(_to == address(rICO)) {
-            // full balance can be sent back to rico
-            require(_amount <= balanceOf(_from), "getUnlockedBalance: Insufficient funds");
+            // full local balance that can be sent back to rico
+            require(_amount <= _balances[_from], "Move: Insufficient funds");
         } else {
-            // for every other address limit to unlocked balance
-            require(_amount <= getUnlockedBalance(_from), "getUnlockedBalance: Insufficient funds");
+            // for every other receiving address limit the _amount to unlocked balance
+            require(_amount <= _balances[_from].sub(rICO.getLockedTokenAmount(_from)), "getUnlockedBalance: Insufficient funds");
         }
-
         ERC777._move(_operator, _from, _to, _amount, _userData, _operatorData);
     }
 
